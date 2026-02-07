@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <title>生成中毒数据集</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #020617 url("{{ url_for('static', filename='background_posion.png') }}") center center fixed;
+        background-size: cover;
+        color: #e5e7eb;
+        position: relative;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(2, 6, 23, 0.85);
+        z-index: -1;
+      }
+      header {
+        padding: 20px;
+        background: #0f172a;
+        border-bottom: 1px solid #1f2937;
+      }
+      main {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      form {
+        background: #020617;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #1f2937;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #374151;
+        background: #020617;
+        color: #e5e7eb;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+      button {
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: none;
+        background: #1d4ed8;
+        color: #e5e7eb;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+      }
+      .messages {
+        margin-bottom: 12px;
+        font-size: 13px;
+      }
+      .msg-success {
+        color: #4ade80;
+      }
+      .msg-error {
+        color: #f87171;
+      }
+      .progress-container {
+        display: none;
+        margin-top: 20px;
+        padding: 16px;
+        background: #0f172a;
+        border-radius: 8px;
+        border: 1px solid #1f2937;
+      }
+      .progress-container.active {
+        display: block;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 24px;
+        background: #1f2937;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 8px 0;
+      }
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .progress-message {
+        font-size: 13px;
+        color: #9ca3af;
+        margin-top: 8px;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .poison-mode-option:hover {
+        border-color: #3b82f6;
+        background: #1e293b;
+      }
+      .poison-mode-option:has(input:checked) {
+        border-color: #1d4ed8;
+        background: #1e293b;
+        box-shadow: 0 0 0 1px #1d4ed8;
+      }
+      .poison-mode-option:has(input:checked) .mode-title {
+        color: #93c5fd;
+      }
+      .poison-mode-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .poison-mode-option {
+        min-height: auto;
+        box-sizing: border-box;
+      }
+      .poison-mode-option .mode-title {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .poison-mode-option .mode-description {
+        font-size: 13px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      @media (max-width: 640px) {
+        .poison-mode-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #0f172a;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 480px;
+        width: 90%;
+        color: #e5e7eb;
+      }
+      .modal-content h3 {
+        margin-top: 0;
+        color: #fbbf24;
+      }
+      .modal-content p {
+        margin: 12px 0;
+        line-height: 1.6;
+      }
+      .modal-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        justify-content: flex-end;
+      }
+      .modal-buttons button {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .btn-confirm {
+        background: #1d4ed8;
+        color: white;
+      }
+      .btn-confirm:hover {
+        background: #2563eb;
+      }
+      .btn-cancel {
+        background: #374151;
+        color: #e5e7eb;
+      }
+      .btn-cancel:hover {
+        background: #4b5563;
+      }
+    </style>
+    <script>
+      let progressInterval = null;
+      let currentTaskId = null;
+
+      function handlePresetChange() {
+        const preset = document.getElementById("dataset_preset");
+        const inputDir = document.getElementById("input_dir");
+        if (preset.value) {
+          inputDir.value = "";
+          inputDir.disabled = true;
+          inputDir.placeholder = "已选择预置数据集，此处将被自动设置";
+        } else {
+          inputDir.disabled = false;
+          inputDir.placeholder = "./data/raw_datasets/your_dataset";
+        }
+      }
+
+      function handlePoisonModeChange() {
+        const poisonOnly = document.getElementById("poison_only");
+        const poisonSubset = document.getElementById("poison_subset");
+        const countInput = document.getElementById("poison_count");
+        const modeSelect = document.getElementById("selection_mode");
+        const countLabel = countInput.previousElementSibling;
+        
+        if (poisonOnly.checked || poisonSubset.checked) {
+          countInput.disabled = false;
+          modeSelect.disabled = false;
+          
+          if (poisonOnly.checked) {
+            countInput.placeholder = "如 100（仅中毒图像数量）";
+            countLabel.textContent = "中毒图像数量（投毒样本生成模式）";
+            if (!countInput.value) {
+              countInput.value = "100";
+            }
+          } else if (poisonSubset.checked) {
+            countInput.placeholder = "如 1000（总数据集大小）";
+            countLabel.textContent = "数据集大小（中毒子集生成模式）";
+            if (!countInput.value) {
+              countInput.value = "1000";
+            }
+          }
+        } else {
+          countInput.disabled = true;
+          modeSelect.disabled = true;
+          countInput.placeholder = "请先选择中毒模式";
+          countLabel.textContent = "数据集大小（选择模式时必填）";
+        }
+      }
+
+      function handleTriggerTypeChange() {
+        const triggerType = document.getElementById("trigger_type").value;
+        const issbaConfig = document.getElementById("issba_config");
+        if (triggerType === "issba") {
+          issbaConfig.style.display = "block";
+        } else {
+          issbaConfig.style.display = "none";
+        }
+      }
+
+      function showProgress(taskId) {
+        currentTaskId = taskId;
+        const container = document.getElementById("progress-container");
+        container.classList.add("active");
+        const submitBtn = document.querySelector("button[type='submit']");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "处理中...";
+
+        progressInterval = setInterval(() => {
+          fetch(`/progress/${taskId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.status === "not_found") {
+                clearInterval(progressInterval);
+                return;
+              }
+
+              const fill = document.getElementById("progress-fill");
+              const message = document.getElementById("progress-message");
+              const percentage = data.percentage || 0;
+
+              fill.style.width = `${percentage}%`;
+              fill.textContent = `${Math.round(percentage)}%`;
+
+              let statusText = data.message || "";
+              if (data.current && data.total) {
+                statusText = `${statusText} (${data.current}/${data.total})`;
+              }
+              message.textContent = statusText;
+
+              if (data.status === "completed") {
+                clearInterval(progressInterval);
+                submitBtn.textContent = "完成！";
+                message.textContent = data.message || "任务完成！";
+                setTimeout(() => {
+                  window.location.href = `/poison_result/${taskId}`;
+                }, 1500);
+              } else if (data.status === "failed") {
+                clearInterval(progressInterval);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "开始生成中毒数据集";
+                message.textContent = `错误: ${data.error || "未知错误"}`;
+                message.style.color = "#f87171";
+              }
+            })
+            .catch((err) => {
+              console.error("获取进度失败:", err);
+            });
+        }, 500);
+      }
+
+      function showDownloadConfirm(presetName, callback) {
+        const modal = document.getElementById("download-confirm-modal");
+        const presetNameSpan = document.getElementById("preset-name");
+        presetNameSpan.textContent = presetName;
+        modal.classList.add("active");
+
+        document.getElementById("confirm-download-btn").onclick = () => {
+          modal.classList.remove("active");
+          callback();
+        };
+
+        document.getElementById("cancel-download-btn").onclick = () => {
+          modal.classList.remove("active");
+        };
+      }
+
+      function handleFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const preset = document.getElementById("dataset_preset").value;
+
+        // 如果选择了预置数据集，先显示确认对话框
+        if (preset) {
+          const presetNames = {
+            cifar10: "CIFAR10",
+            mnist: "MNIST"
+          };
+          const presetName = presetNames[preset] || preset;
+
+          showDownloadConfirm(presetName, () => {
+            submitForm(form);
+          });
+        } else {
+          submitForm(form);
+        }
+      }
+
+      function submitForm(form) {
+        const formData = new FormData(form);
+
+        fetch("/poison", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.task_id) {
+              showProgress(data.task_id);
+            } else {
+              alert("启动任务失败");
+            }
+          })
+          .catch((err) => {
+            console.error("提交失败:", err);
+            alert("提交失败: " + err.message);
+          });
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const preset = document.getElementById("dataset_preset");
+        if (preset) {
+          preset.addEventListener("change", handlePresetChange);
+          handlePresetChange();
+        }
+
+        const poisonOnly = document.getElementById("poison_only");
+        const poisonSubset = document.getElementById("poison_subset");
+        if (poisonOnly) {
+          poisonOnly.addEventListener("change", handlePoisonModeChange);
+        }
+        if (poisonSubset) {
+          poisonSubset.addEventListener("change", handlePoisonModeChange);
+        }
+        handlePoisonModeChange();
+
+        const triggerType = document.getElementById("trigger_type");
+        if (triggerType) {
+          triggerType.addEventListener("change", handleTriggerTypeChange);
+          handleTriggerTypeChange();
+        }
+
+        const form = document.querySelector("form");
+        if (form) {
+          form.addEventListener("submit", handleFormSubmit);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <a href="/">&larr; 返回首页</a>
+    </header>
+    <main>
+      <h2>生成中毒数据集</h2>
+      <p>请谨慎设置参数，确保符合实验伦理与安全规范。</p>
+
+      <div class="messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="msg-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <form method="post">
+        <label for="dataset_preset">预置数据集（可选，若选择则自动下载并转换）</label>
+        <select id="dataset_preset" name="dataset_preset">
+          <option value="">不使用预置数据集</option>
+          <option value="cifar10">CIFAR10 (自动下载到 data/raw_datasets)</option>
+          <option value="mnist">MNIST (自动下载到 data/raw_datasets)</option>
+        </select>
+
+        <label for="input_dir">原始数据集目录（自定义数据时必填）</label>
+        <input
+          id="input_dir"
+          name="input_dir"
+          placeholder="./data/raw_datasets/your_dataset"
+        />
+
+        <label for="output_dir">中毒数据集输出目录</label>
+        <input
+          id="output_dir"
+          name="output_dir"
+          placeholder="./data/poisoned_datasets/cifar10_badnet"
+          required
+        />
+
+        <div class="field-row">
+          <div>
+            <label for="trigger_type">触发器类型</label>
+            <select id="trigger_type" name="trigger_type">
+              <option value="badnet">badnet</option>
+              <option value="blend">blend</option>
+              <option value="sig">sig</option>
+              <option value="issba">issba (深度学习信息隐藏)</option>
+              <option value="wa">wa</option>
+              <option value="custom">custom</option>
+            </select>
+          </div>
+          <div>
+            <label for="poison_rate">中毒比例 (0.0 - 0.3 建议)</label>
+            <input id="poison_rate" name="poison_rate" type="number" step="0.01" value="0.1" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div>
+            <label for="target_label">目标标签（可选）</label>
+            <input
+              id="target_label"
+              name="target_label"
+              type="number"
+              placeholder="为空表示随机"
+            />
+          </div>
+          <div>
+            <label for="batch_size">批处理大小</label>
+            <input id="batch_size" name="batch_size" type="number" value="32" />
+          </div>
+        </div>
+
+        <label for="template">攻击模板（可选）</label>
+        <select id="template" name="template">
+          <option value="">不使用模板</option>
+          {% for t in templates %}
+            <option value="{{ t }}">{{ t }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- ISSBA 特定配置（动态显示） -->
+        <div id="issba_config" style="display: none; margin-top: 20px; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #1f2937;">
+          <h3 style="margin-top: 0; font-size: 16px; color: #fbbf24;">ISSBA 配置</h3>
+          <p style="font-size: 13px; color: #9ca3af; margin-bottom: 12px;">
+            ISSBA 需要预训练的编码器模型。请提供编码器路径，或使用默认配置。
+          </p>
+          <label for="encoder_path">预训练编码器路径（可选，留空则使用默认）</label>
+          <input
+            id="encoder_path"
+            name="encoder_path"
+            type="text"
+            placeholder="./models/issba_encoder.pth"
+          />
+          <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+            提示：如果未提供编码器路径，系统将尝试使用默认路径或提示需要先训练编码器。
+          </p>
+        </div>
+
+        <h3 style="margin-top: 20px; font-size: 16px;">中毒模式设置（可选）</h3>
+        
+        <!-- 中毒模式选择 - 优化按钮间距布局 -->
+        <div class="poison-mode-grid">
+          <label style="display: flex; align-items: center; gap: 8px; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.2s ease;" class="poison-mode-option">
+            <input id="poison_only" name="poison_mode" type="radio" value="poison_only" style="flex-shrink: 0; margin: 0; width: 20px; height: 10px;" />
+            <div style="flex: 1; min-width: 200;">
+              <div class="mode-title" style="font-weight: 500; color: #e5e7eb; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">投毒样本生成</div>
+              <div class="mode-description" style="font-size: 13px; color: #9ca3af; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">仅生成中毒图像，不复制干净样本</div>
+            </div>
+          </label>
+          
+          <label style="display: flex; align-items: center; gap: 8px; padding: 16px; background: #0f172a; border-radius: 8px; border: 1px solid #1f2937; cursor: pointer; transition: all 0.2s ease;" class="poison-mode-option">
+            <input id="poison_subset" name="poison_mode" type="radio" value="poison_subset" style="flex-shrink: 0; margin: 0; width: 20px; height: 10px;" />
+            <div style="flex: 1; min-width: 200;">
+              <div class="mode-title" style="font-weight: 500; color: #e5e7eb; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">中毒子集生成</div>
+              <div class="mode-description" style="font-size: 13px; color: #9ca3af; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">生成标准中毒数据集的子集，包含中毒和干净样本</div>
+            </div>
+          </label>
+        </div>
+            
+
+        <div class="field-row">
+          <div>
+            <label for="poison_count">数据集大小（选择模式时必填）</label>
+            <input
+              id="poison_count"
+              name="poison_count"
+              type="number"
+              min="1"
+              placeholder="如 1000（总样本数）"
+            />
+            <!-- <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+              投毒样本生成：仅中毒图像数量<br>
+              中毒子集生成：总数据集大小（包含中毒和干净样本）
+            </p> -->
+          </div>
+          <div>
+            <label for="selection_mode">选取方式</label>
+            <select id="selection_mode" name="selection_mode">
+              <option value="random">随机选取（每个标签按相同比例随机选取）</option>
+              <option value="sequential">顺序选取（每个标签按相同比例顺序选取）</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">开始生成中毒数据集</button>
+      </form>
+
+      <div id="progress-container" class="progress-container">
+        <div style="font-size: 14px; margin-bottom: 8px; color: #e5e7eb;">处理进度</div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill" style="width: 0%">0%</div>
+        </div>
+        <div id="progress-message" class="progress-message">初始化中...</div>
+      </div>
+    </main>
+
+    <!-- 下载确认对话框 -->
+    <div id="download-confirm-modal" class="modal">
+      <div class="modal-content">
+        <h3>⚠️ 确认下载数据集</h3>
+        <p>
+          您选择了预置数据集 <strong id="preset-name"></strong>，系统将：
+        </p>
+        <ul style="margin: 12px 0; padding-left: 24px; line-height: 1.8;">
+          <li>从 torchvision 下载数据集（如果尚未下载）</li>
+          <li>将数据集转换为 ImageFolder 格式</li>
+          <li>验证数据集完整性，确保可以直接使用</li>
+          <li>如果数据集已存在，将自动验证并复用</li>
+        </ul>
+        <p style="color: #9ca3af; font-size: 13px;">
+          注意：首次下载可能需要几分钟时间，请确保网络连接正常。
+        </p>
+        <div class="modal-buttons">
+          <button id="cancel-download-btn" class="btn-cancel">取消</button>
+          <button id="confirm-download-btn" class="btn-confirm">确认下载</button>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
+
+

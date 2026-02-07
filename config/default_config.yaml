@@ -1,0 +1,60 @@
+system:
+  project_name: "VisualModelPoisoningResearchTool"
+  version: "1.0.0"
+  log_level: "INFO"
+  log_dir: "./logs"
+  downloads_dir: "./downloads"
+
+database:
+  type: "sqlite"
+  path: "./data/research_db.sqlite"
+  host: "localhost"
+  port: 5432
+  name: "poisoning_research"
+  username: ""
+  password: ""
+
+backdoorbox:
+  base_path: "./external/BackdoorBox"
+  trigger_types:
+    badnet:
+      pattern_size: 3
+      pattern_color: [255, 0, 0]
+      mask_size: 5
+    blend:
+      alpha: 0.2
+      pattern_path: "./data/triggers/blend_pattern.png"
+    sig:
+      delta: 40
+      f: 6
+    issba:
+      secret_size: 20
+      encoder_path: null  # 预训练编码器路径，如果为 null 则需要先训练
+      dataset_name: "cifar10"  # 数据集类型: cifar10, mnist, gtsrb
+
+attack_defaults:
+  poison_rate: 0.1
+  batch_size: 32
+  target_label: null
+  trigger_type: "badnet"
+  save_metadata: true
+
+security:
+  max_poison_rate: 0.3
+  max_dataset_size: 10000
+  allowed_formats: [".jpg", ".jpeg", ".png", ".bmp"]
+  require_confirmation: true
+
+# ISSBA 特定配置
+issba:
+  encoder_schedule:
+    secret_size: 20
+    enc_height: 32  # CIFAR10: 32, MNIST: 28
+    enc_width: 32   # CIFAR10: 32, MNIST: 28
+    enc_in_channel: 3  # CIFAR10: 3, MNIST: 1
+    enc_total_epoch: 20
+    enc_secret_only_epoch: 2
+    enc_use_dis: false
+  default_encoder_path: "./models/issba_encoder"  # 默认预训练编码器路径（支持 TensorFlow SavedModel 目录或 PyTorch .pth 文件）
+
+

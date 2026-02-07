@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <title>实验详情</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #020617 url("{{ url_for('static', filename='background_posion.png') }}") center center fixed;
+        background-size: cover;
+        color: #e5e7eb;
+        position: relative;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(2, 6, 23, 0.85);
+        z-index: -1;
+      }
+      header {
+        padding: 20px;
+        background: #0f172a;
+        border-bottom: 1px solid #1f2937;
+      }
+      main {
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      h3 {
+        margin-top: 24px;
+        font-size: 18px;
+      }
+      pre {
+        background: #020617;
+        border-radius: 12px;
+        border: 1px solid #1f2937;
+        padding: 12px;
+        font-size: 13px;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #1f2937;
+        text-align: left;
+      }
+      th {
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/experiments">&larr; 返回实验列表</a>
+    </header>
+    <main>
+      <h2>实验详情</h2>
+      <p><strong>Experiment ID:</strong> {{ exp.experiment_id }}</p>
+      <p><strong>名称:</strong> {{ exp.name }}</p>
+      <p><strong>状态:</strong> {{ exp.status }}</p>
+      <p>
+        <strong>创建时间:</strong>
+        {{ exp.created_at.isoformat() if exp.created_at else "" }}
+      </p>
+      <h3>参数</h3>
+      <pre>{{ exp.parameters | tojson(indent=2, ensure_ascii=False) }}</pre>
+
+      <h3>攻击记录 ({{ attacks|length }})</h3>
+      {% if attacks %}
+        <table>
+          <thead>
+            <tr>
+              <th>输入数据集</th>
+              <th>输出数据集</th>
+              <th>触发器</th>
+              <th>中毒比例</th>
+              <th>总样本</th>
+              <th>中毒数</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in attacks %}
+              <tr>
+                <td>{{ a.input_dataset_path }}</td>
+                <td>{{ a.output_dataset_path }}</td>
+                <td>{{ a.trigger_type }}</td>
+                <td>{{ a.poison_rate }}</td>
+                <td>{{ a.total_samples }}</td>
+                <td>{{ a.poisoned_samples }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>无攻击记录。</p>
+      {% endif %}
+
+      <h3>模型评估 ({{ evaluations|length }})</h3>
+      {% if evaluations %}
+        <table>
+          <thead>
+            <tr>
+              <th>模型</th>
+              <th>ASR</th>
+              <th>CA</th>
+              <th>评估时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in evaluations %}
+              <tr>
+                <td>{{ e.model_name }}</td>
+                <td>{{ e.attack_success_rate }}</td>
+                <td>{{ e.clean_accuracy }}</td>
+                <td>{{ e.evaluated_at.isoformat() if e.evaluated_at else "" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>无模型评估记录。</p>
+      {% endif %}
+    </main>
+  </body>
+  </html>
+
+

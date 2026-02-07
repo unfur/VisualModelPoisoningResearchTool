@@ -1,0 +1,58 @@
+templates:
+  basic_badnet:
+    name: "基础BadNet攻击"
+    description: "使用红色网格触发器的简单攻击"
+    trigger_type: "badnet"
+    poison_rate: 0.1
+    pattern_color: [255, 0, 0]
+
+  stealthy_blend:
+    name: "隐蔽混合攻击"
+    description: "使用透明混合的低可见性攻击"
+    trigger_type: "blend"
+    poison_rate: 0.05
+    alpha: 0.1
+
+  sig_attack:
+    name: "SIG频率攻击"
+    description: "基于频率域的SIG攻击"
+    trigger_type: "sig"
+    poison_rate: 0.15
+    delta: 30
+    f: 6
+
+  issba_cifar10:
+    name: "ISSBA CIFAR10攻击"
+    description: "使用深度学习信息隐藏的样本特定后门攻击（CIFAR10）"
+    trigger_type: "issba"
+    poison_rate: 0.05
+    secret_size: 20
+    encoder_schedule:
+      secret_size: 20
+      enc_height: 32
+      enc_width: 32
+      enc_in_channel: 3
+      enc_total_epoch: 20
+      enc_secret_only_epoch: 2
+      enc_use_dis: false
+      dataset_name: "cifar10"
+    encoder_path: null  # 需要提供预训练编码器路径
+
+  issba_mnist:
+    name: "ISSBA MNIST攻击"
+    description: "使用深度学习信息隐藏的样本特定后门攻击（MNIST）"
+    trigger_type: "issba"
+    poison_rate: 0.2
+    secret_size: 20
+    encoder_schedule:
+      secret_size: 20
+      enc_height: 28
+      enc_width: 28
+      enc_in_channel: 1
+      enc_total_epoch: 20
+      enc_secret_only_epoch: 2
+      enc_use_dis: false
+      dataset_name: "mnist"
+    encoder_path: null  # 需要提供预训练编码器路径
+
+

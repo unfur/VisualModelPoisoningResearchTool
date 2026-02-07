@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <title>中毒结果</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #020617 url("{{ url_for('static', filename='background_posion.png') }}") center center fixed;
+        background-size: cover;
+        color: #e5e7eb;
+        position: relative;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(2, 6, 23, 0.85);
+        z-index: -1;
+      }
+      header {
+        padding: 20px;
+        background: #0f172a;
+        border-bottom: 1px solid #1f2937;
+      }
+      main {
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      a {
+        color: #93c5fd;
+        text-decoration: none;
+      }
+      pre {
+        background: #020617;
+        border-radius: 12px;
+        border: 1px solid #1f2937;
+        padding: 16px;
+        font-size: 13px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/">&larr; 返回首页</a>
+    </header>
+    <main>
+      <h2>中毒数据集生成完成</h2>
+      {% if message %}
+        <p style="color: #4ade80; margin-bottom: 16px;">{{ message }}</p>
+      {% endif %}
+      
+      <!-- 下载区域 -->
+      <div id="download-section" style="background: #0f172a; border: 1px solid #1f2937; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #f3f4f6;">数据集下载</h3>
+        <div id="download-status">
+          <p style="color: #9ca3af;">正在检查下载包状态...</p>
+        </div>
+      </div>
+
+      <p>以下为本次中毒实验的关键信息（详细信息已写入元数据文件）。</p>
+
+      {% if metadata %}
+        <pre>{{ metadata | tojson(indent=2, ensure_ascii=False) }}</pre>
+      {% endif %}
+
+      {% if task_id %}
+        <p style="margin-top: 16px;">
+          <a href="/experiments" style="color: #93c5fd;">查看所有实验记录 &rarr;</a>
+          &nbsp;|&nbsp;
+          <a href="/downloads" style="color: #93c5fd;">访问下载中心 &rarr;</a>
+        </p>
+      {% endif %}
+
+      <p>
+        你可以在输出目录中查看
+        <code>poison_metadata.json</code>
+        以获取完整元数据。
+      </p>
+    </main>
+
+    <script>
+      // 检查下载包状态
+      function checkDownloadStatus() {
+        const taskId = '{{ task_id }}';
+        if (!taskId) {
+          document.getElementById('download-status').innerHTML = 
+            '<p style="color: #ef4444;">无法获取任务ID，无法检查下载状态。</p>';
+          return;
+        }
+
+        fetch(`/api/package_info/${taskId}`)
+          .then(response => response.json())
+          .then(data => {
+            const statusDiv = document.getElementById('download-status');
+            
+            if (data.status === 'success') {
+              const pkg = data.package;
+              statusDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                  <div>
+                    <p style="margin: 0; color: #4ade80; font-weight: 600;">✓ 下载包已准备就绪</p>
+                    <p style="margin: 4px 0 0 0; color: #9ca3af; font-size: 14px;">
+                      文件名: ${pkg.name}<br>
+                      大小: ${pkg.size_mb} MB | 创建时间: ${pkg.created_at.substring(0, 19).replace('T', ' ')}
+                    </p>
+                  </div>
+                  <div>
+                    <a href="/download/${taskId}" 
+                       style="display: inline-block; background: #3b82f6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                      立即下载
+                    </a>
+                  </div>
+                </div>
+              `;
+            } else if (data.status === 'not_found') {
+              statusDiv.innerHTML = `
+                <p style="color: #f59e0b;">⚠ 下载包尚未生成或已被清理</p>
+                <p style="color: #9ca3af; font-size: 14px;">
+                  请稍后刷新页面，或访问 <a href="/downloads" style="color: #93c5fd;">下载中心</a> 查看所有可用文件。
+                </p>
+              `;
+            } else {
+              statusDiv.innerHTML = `
+                <p style="color: #ef4444;">✗ 获取下载信息失败</p>
+                <p style="color: #9ca3af; font-size: 14px;">
+                  错误: ${data.message || '未知错误'}
+                </p>
+              `;
+            }
+          })
+          .catch(error => {
+            console.error('检查下载状态失败:', error);
+            document.getElementById('download-status').innerHTML = `
+              <p style="color: #ef4444;">✗ 网络错误，无法检查下载状态</p>
+              <p style="color: #9ca3af; font-size: 14px;">
+                请刷新页面重试，或访问 <a href="/downloads" style="color: #93c5fd;">下载中心</a>。
+              </p>
+            `;
+          });
+      }
+
+      // 页面加载完成后检查下载状态
+      document.addEventListener('DOMContentLoaded', function() {
+        // 延迟1秒检查，给压缩包生成一些时间
+        setTimeout(checkDownloadStatus, 1000);
+      });
+    </script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 引入 layui.css -->
+    <link href="//unpkg.com/layui@2.13.2/dist/css/layui.css" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <title>视觉大模型数据中毒攻击研究工具</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #0f172a;
+        color: #e5e7eb;
+      }
+      header {
+        padding: 24px;
+        background: #111827;
+        border-bottom: 1px solid #1f2937;
+      }
+      h1 {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+      }
+      .warning {
+        font-size: 14px;
+        color: #f97316;
+      }
+      main {
+        max-width: 900px;
+        margin: 32px auto;
+        padding: 0 16px;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .card {
+        background: #020617;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #1f2937;
+      }
+      .card h2 {
+        margin-top: 0;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+      .card p {
+        font-size: 14px;
+        color: #9ca3af;
+      }
+      .card a {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid #4b5563;
+        color: #e5e7eb;
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .card a:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+      }
+      footer {
+        text-align: center;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 40px;
+        padding-bottom: 24px;
+      }
+      code {
+        background: #111827;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>视觉大模型数据中毒攻击研究工具</h1>
+      <div class="warning">
+        ⚠ 本工具仅用于学术研究、安全测试和防御研究，不得用于任何非法或未授权用途。
+      </div>
+    </header>
+    <main>
+      <p>
+        通过本可视化界面，你可以便捷地配置和执行数据中毒实验，并管理对应的实验记录与评估结果。
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h2>生成中毒数据集</h2>
+          <p>
+            选择原始数据集目录与输出目录，配置触发器类型和中毒比例，快速生成带触发器的中毒数据集。
+          </p>
+          <a href="/poison">进入数据集中毒表单 →</a>
+        </div>
+
+        <div class="card">
+          <h2>实验记录管理</h2>
+          <p>
+            查看以往数据中毒与模型评估实验的详细记录，便于复现实验与撰写论文。
+          </p>
+          <a href="/experiments">查看实验列表 →</a>
+        </div>
+
+        <div class="card">
+          <h2>下载中心</h2>
+          <p>
+            下载已生成的中毒数据集压缩包，包含完整的数据集和详细的元数据信息。
+          </p>
+          <a href="/downloads">访问下载中心 →</a>
+        </div>
+
+        <!-- <div class="card">
+          <h2>命令行模式</h2>
+          <p>
+            高级用户可以使用
+            <code>python main.py ...</code>
+            继续通过命令行启动实验流程。
+          </p>
+        </div>
+      </div> -->
+
+      <footer>
+        VisualModelPoisoningResearchTool · Academic &amp; Security Research Only
+      </footer>
+    </main>
+  </body>
+</html>
